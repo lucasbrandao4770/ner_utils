@@ -4,9 +4,10 @@ Splits NER dataset into cross validation and generate statistics.
 Generates subfolder for each version and fold's, with stats and filtered max_length sentence.
 
 
-## How to use - Example
+## How to use 
+- Example
 
-python .\main.py --f corejur_nerv2.conll --kfold 5 --version versao0 --max-lenght 250Cancel changes
+python main.py --f corejur_nerv2.conll --kfold 5 --version versao0 --max_length 250
 
 
 
