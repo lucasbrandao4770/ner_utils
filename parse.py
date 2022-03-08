@@ -6,10 +6,10 @@ def parseArguments():
     parser.add_argument("--kfold", type=int, default=5, help="Number of K-folds")
     parser.add_argument("--version", type=str,default=None, help="Version of dataset, and filename for saving")
     parser.add_argument(
-        "--max-lenght",
+        "--max_length",
         type=int,
         default=250,       
-        help="Max tokens lenght for sentence")
+        help="Max tokens length for sentence")
 
     args, _ = parser.parse_known_args()
         

@@ -55,5 +55,11 @@ def pandas2conll(df, fname):
 
 
 
+def filter_length_dataset(df, length_to_filter = 250):
+    assert length_to_filter > 0, 'Length must be positive'
+    df['quantidadeTokens'] = df['text'].apply(len)   # QUANTIDADE DE SENTENÇAS/MAX/MEDIA E MIN
+    filtered_df = df[df['quantidadeTokens'] <= length_to_filter]  
+
+    return filtered_df   
 
 
