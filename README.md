@@ -28,5 +28,7 @@ Args:
 
 
 TO DO
+
 [ ] Args de verbose para ver ou não os gráficos
+
 [ ] Criar uma thread para a visualização dos gráfico, para permitir a execução durante a visualização
