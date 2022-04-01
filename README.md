@@ -24,10 +24,9 @@ Args:
     
 
 
-TO DO
-[ ] Args de verbose para ver ou não os gráficos
-[ ] Criar uma thread para a visualização dos gráfico, para permitir a execução durante a visualização
-
 <img src="https://user-images.githubusercontent.com/58753373/157150045-d1749366-3ac8-412b-b71d-20b89105793d.png" width="600" height="200">
 
 
+TO DO
+[ ] Args de verbose para ver ou não os gráficos
+[ ] Criar uma thread para a visualização dos gráfico, para permitir a execução durante a visualização
