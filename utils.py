@@ -1,5 +1,5 @@
 import pandas as pd
-
+import json
 
 def conll2pandas(path: str):
     """Convert conll file to pandas dataframe
@@ -46,14 +46,25 @@ def pandas2conll(df, fname):
         
     for text, ent in zip(df['text'], df['tags']):
         for word, tag in zip(text, ent):            
-            rows.append(str(word)+'\t'+str(tag)+'\tO\tO\n')
+            rows.append(str(word)+' O O '+str(tag)+'\n')
         rows.append('\n')
         
     
-    f = open(fname, 'w', encoding="utf-8")
-    f.writelines(rows)
+    with open(fname, 'w', encoding="utf-8") as f:
+        f.writelines(rows)
 
-
+def pandas2json(df, fname: str):    
+    texts = []
+    for i in range(len(df)):
+        text_dict = {
+            "text": df['text'].iloc[i],
+            "tags": df['tags'].iloc[i]
+        }
+        texts.append(text_dict)
+        
+    with open(fname, 'w', encoding='utf8') as file:
+        for text in texts:
+            json.dump(text, file, ensure_ascii=False)
 
 def filter_length_dataset(df, length_to_filter = 250):
     assert length_to_filter > 0, 'Length must be positive'

@@ -1,6 +1,3 @@
-
-
-
 import pandas as pd
 import numpy as np
 import time
@@ -95,19 +92,24 @@ class DatasetAnalysis:
     def convert_stats2excel(self, save_path = ''):         
         token_infos = self.stats.copy()
         labels = token_infos.pop('Labels')
-
-        # add '-----------' to better view in excel
-        token_infos['------------------'] = '------------------'
-
-        excel_stats = {                  
+       
+        excel_sheet1 = {                  
             # COLUMN        # ROWS
-            'Tokens infos': token_infos,                
-            'Quantidade de Labels': labels     # change the column name to better view
-            
+            'Tokens infos': token_infos,                                           
         }
+        
+        excel_sheet2 = {
+            'Quantidade de Labels': labels
+        }
+        writer = pd.ExcelWriter(os.path.join(save_path, f'analysis_{self.time_stamp}.xlsx'), engine='xlsxwriter')
 
-        pd.DataFrame.from_dict(excel_stats, orient='columns')\
-            .to_excel(os.path.join(save_path, f'analysis_{self.time_stamp}.xlsx'))
+        pd.DataFrame.from_dict(excel_sheet1, orient='columns')\
+            .to_excel(writer, sheet_name='TokenInfo')
+        
+        pd.DataFrame.from_dict(excel_sheet2, orient='columns')\
+            .to_excel(writer, sheet_name = 'Entidades')
+
+        writer.close()
 
     def generate_dataset_info(self, df, is_alldata=False, n_fold=0, train_data=True) -> str:
         assert n_fold >= 0, "n-fold cannot be negative"

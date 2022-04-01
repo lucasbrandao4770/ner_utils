@@ -22,3 +22,8 @@ Args:
     
     --max_length filter for sentence tokens max_length (250)
     
+
+
+TO DO
+[ ] Args de verbose para ver ou não os gráficos
+[ ] Criar uma thread para a visualização dos gráfico, para permitir a execução durante a visualização

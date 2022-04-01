@@ -3,7 +3,7 @@ from sklearn.model_selection import KFold
 import utils 
 import generate_stats
 import parse
-from analysis_dataset import DatasetAnalysis
+from stats import DatasetAnalysis
 
 args = parse.parseArguments() # PARSING ARGS
 
@@ -20,14 +20,17 @@ df = utils.conll2pandas(FILENAME) # LOAD THE DATASET FROM CONLL FILE
 print('Dataset loaded')
 kf = KFold(n_splits=N_KFOLD, random_state=0, shuffle=True) # KFOLD WITH SEED 0
 
+
 # DATASET ANALYSIS
 analysis = DatasetAnalysis(path = FILENAME, df=df)
 stats = analysis.generate_dataset_info(df, is_alldata=True)
-f = open(os.path.join(FOLDER_VERSION, 'stats_full.txt'), 'w', encoding='utf-8')
-f.writelines(stats)
-f.close()
+with open(os.path.join(FOLDER_VERSION, 'stats_full.txt'), 'w', encoding='utf-8') as f:
+    f.writelines(stats)
+
+
 analysis.convert_stats2excel(FOLDER_VERSION)
 analysis.plot_graphs(FOLDER_VERSION)
+
 
 for i, (train_index, test_index) in enumerate(kf.split(df)): 
     save_path =  FOLDER_VERSION+'/'+'fold-'+str(i)+'/'    # PATH TO SAVE
@@ -41,10 +44,10 @@ for i, (train_index, test_index) in enumerate(kf.split(df)):
     stats.extend(analysis.generate_dataset_info(test_data, n_fold=i, train_data=False))  # TEST DATA
     
     # save stats    
-    # WRITE FILE    
-    f = open(os.path.join(save_path, 'stats.txt'), 'w', encoding='utf-8')
-    f.writelines(stats)
-    f.close()
+    # WRITE FILE      
+    with open(os.path.join(save_path, 'stats.txt'), 'w', encoding='utf-8') as f:
+        f.writelines(stats)
+    
     
     # FILTER MAX_LENGHT SENTENCES
     train_data = utils.filter_length_dataset(train_data, length_to_filter = MAX_LENGTH) # FILTER SENTENCES TOO LONG
@@ -53,6 +56,8 @@ for i, (train_index, test_index) in enumerate(kf.split(df)):
     # CONVERT TO CONLL AND SAVE
     utils.pandas2conll(train_data, save_path+'train.conll')  # SAVE IN CONLL
     utils.pandas2conll(test_data, save_path+'dev.conll') 
+    utils.pandas2json(train_data, save_path+'train.json')  # SAVE IN json
+    utils.pandas2json(test_data, save_path+'dev.json') 
     print(f'Save dataset and stats for fold-{i}')
 
 print('Done!')
