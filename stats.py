@@ -46,7 +46,7 @@ class Stats:
 
         # ORDEM DECRESCENTE DO LABELS E RETIRANDO _ 
         self.labels = {k.replace('_', ' '): v for k, v in sorted(labels.items(), key=lambda item: item[1], reverse=True)}
-
+        self.labels_ratio = {k:(v/sum(labels.values())) for k,v in labels.items()} # gerando as porcentagens da quantidade das labels
         # QUANTIDADE DE SENTENCAS ACIMA DE 250 TOKENS
         self.sentences_over_250 = self.df[self.df['quantidadeTokens'] > 250].count()['text']        
 
@@ -63,17 +63,12 @@ class Stats:
             'Tags Length': self.len_tags, #int
             'Tags Null Length': self.len_null_tags, #int 
             'Labels Length': self.len_labels, #int
-            'Labels': self.labels, #dict               
+
+            'Labels': self.labels, #dict     
+            'Labels Ratio': self.labels_ratio, # dict          
         }
         return infos
-        # Labels Sections
-        # labels = {'Labels': self.labels} 
-
-        # return {                           
-        #         'Tokens': token_infos, #dict
-        #         'Labels': labels # dict                           
-        #     }
-
+       
 
 class DatasetAnalysis:
     def __init__(self, path, df=None):
@@ -92,6 +87,7 @@ class DatasetAnalysis:
     def convert_stats2excel(self, save_path = ''):         
         token_infos = self.stats.copy()
         labels = token_infos.pop('Labels')
+        labels_ratio = token_infos.pop('Labels Ratio')
        
         excel_sheet1 = {                  
             # COLUMN        # ROWS
@@ -99,8 +95,10 @@ class DatasetAnalysis:
         }
         
         excel_sheet2 = {
-            'Quantidade de Labels': labels
+            'Quantidade de Labels': labels,
+            'Porcentagem das Labels': labels_ratio,
         }
+
         writer = pd.ExcelWriter(os.path.join(save_path, f'analysis_{self.time_stamp}.xlsx'), engine='xlsxwriter')
 
         pd.DataFrame.from_dict(excel_sheet1, orient='columns')\
@@ -111,7 +109,7 @@ class DatasetAnalysis:
 
         writer.close()
 
-    def generate_dataset_info(self, df, is_alldata=False, n_fold=0, train_data=True) -> str:
+    def generate_dataset_info(self, is_alldata=False, n_fold=0, train_data=True) -> str:
         assert n_fold >= 0, "n-fold cannot be negative"
 
         if is_alldata:

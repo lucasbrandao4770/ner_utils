@@ -1,7 +1,6 @@
 import os
 from sklearn.model_selection import KFold
 import utils 
-import generate_stats
 import parse
 from stats import DatasetAnalysis
 
@@ -14,6 +13,8 @@ MAX_LENGTH = args.max_length
 assert os.path.exists(FOLDER_VERSION) == False, 'The version already exists' # assert the version do not exists
 os.makedirs(FOLDER_VERSION)
 
+
+
 print('Loading Dataset')
 df = utils.conll2pandas(FILENAME) # LOAD THE DATASET FROM CONLL FILE
 
@@ -23,13 +24,20 @@ kf = KFold(n_splits=N_KFOLD, random_state=0, shuffle=True) # KFOLD WITH SEED 0
 
 # DATASET ANALYSIS
 analysis = DatasetAnalysis(path = FILENAME, df=df)
-stats = analysis.generate_dataset_info(df, is_alldata=True)
+stats = analysis.generate_dataset_info(is_alldata=True)
 with open(os.path.join(FOLDER_VERSION, 'stats_full.txt'), 'w', encoding='utf-8') as f:
     f.writelines(stats)
 
 
 analysis.convert_stats2excel(FOLDER_VERSION)
 analysis.plot_graphs(FOLDER_VERSION)
+
+# FILTER TAGS WITH MINIMUM RATIO
+df = utils.filter_entities(df, minimum_entity_ratio=0.005) # removendo abaixo de 0.5%
+
+
+# FILTER MAX_LENGHT SENTENCES
+df = utils.filter_length_dataset(df, length_to_filter = MAX_LENGTH)  # FILTER SENTENCES TOO LONG
 
 
 for i, (train_index, test_index) in enumerate(kf.split(df)): 
@@ -40,18 +48,14 @@ for i, (train_index, test_index) in enumerate(kf.split(df)):
     train_data, test_data = df.loc[train_index], df.loc[test_index] # get the data from indexes
     stats = []
     analysis = DatasetAnalysis(path = FILENAME, df=df)     
-    stats.extend(analysis.generate_dataset_info(train_data, n_fold=i, train_data=True))  # TRAIN DATA
-    stats.extend(analysis.generate_dataset_info(test_data, n_fold=i, train_data=False))  # TEST DATA
+    stats.extend(analysis.generate_dataset_info(n_fold=i, train_data=True))  # TRAIN DATA
+    stats.extend(analysis.generate_dataset_info(n_fold=i, train_data=False))  # TEST DATA
     
     # save stats    
     # WRITE FILE      
     with open(os.path.join(save_path, 'stats.txt'), 'w', encoding='utf-8') as f:
         f.writelines(stats)
     
-    
-    # FILTER MAX_LENGHT SENTENCES
-    train_data = utils.filter_length_dataset(train_data, length_to_filter = MAX_LENGTH) # FILTER SENTENCES TOO LONG
-    test_data  = utils.filter_length_dataset(test_data, length_to_filter = MAX_LENGTH) # FILTER SENTENCES TOO LONG
     
     # CONVERT TO CONLL AND SAVE
     utils.pandas2conll(train_data, save_path+'train.conll')  # SAVE IN CONLL
