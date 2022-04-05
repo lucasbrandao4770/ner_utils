@@ -31,4 +31,6 @@ TO DO
 
 [ ] Args de verbose para ver ou não os gráficos
 
+[ ] Args de tags minimum ratio para filtrar o dataset
+
 [ ] Criar uma thread para a visualização dos gráfico, para permitir a execução durante a visualização

@@ -72,7 +72,7 @@ class Stats:
 
 class DatasetAnalysis:
     def __init__(self, path, df=None):
-        self.df = conll2pandas(path) #if df!=None else df
+        self.df = df #conll2pandas(path) #if df!=None else df
         self.stats = Stats(self.df).get_stats()
         self.time_stamp = self._get_df_timestamp(path)
         self.FIG_PATH = 'figs_outputs'
@@ -136,7 +136,7 @@ class DatasetAnalysis:
         text.append(  f"Quantidade de tags NÃO VAZIAS: {str(self.stats['Tags Length'])}\n"  ) 
         text.append(  f"Quantidade de tags VAZIAS ('O'): {str(self.stats['Tags Null Length'])}\n"  ) 
         
-        text.append('\n\n' + "-"*15)
+        text.append('\n\n' + "-"*15+'\n\n')
        
         for k, v in self.stats['Labels'].items():
             text.append(k+': '+ str(v) + ' tokens\n')

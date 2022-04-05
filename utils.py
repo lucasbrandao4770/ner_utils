@@ -1,3 +1,4 @@
+from typing import List
 import pandas as pd
 import json
 import numpy as np
@@ -72,11 +73,12 @@ def filter_length_dataset(df, length_to_filter = 250):
     df['quantidadeTokens'] = df['text'].apply(len)   # QUANTIDADE DE SENTENÇAS/MAX/MEDIA E MIN
     dataset_filtered = df[df['quantidadeTokens'] <= length_to_filter]  
 
-    dataset_filtered = dataset_filtered.reset_index() # reset index
-    return dataset_filtered   
+    dataset_filtered = dataset_filtered.drop('quantidadeTokens', axis=1) # reset index
+    dataset_filtered = dataset_filtered.reset_index(drop=True)
+    return dataset_filtered
 
 
-def filter_entities(df, minimum_entity_ratio: 0.005):
+def filter_entities(df, minimum_entity_ratio: 0):
     assert minimum_entity_ratio > 0 and minimum_entity_ratio < 1, 'Ratio must be between 0 and 1'
 
 # TODAS AS TAGS DIFERENTES DE 'O'    
@@ -96,6 +98,10 @@ def filter_entities(df, minimum_entity_ratio: 0.005):
             entities_to_remove.append(k)
         else:
             break # array está em ordem crescente, ou seja, todos os outros serão > minimo
+
+    return remove_entites(df, entities_to_remove=entities_to_remove)
+
+def remove_entites(df, entities_to_remove: List):
     print('Entidades removidas', entities_to_remove)
 
     df['toRemoveSentence'] = df['tags'].apply(lambda tags: any( [tag[2:] in entities_to_remove for tag in tags] ))
@@ -104,7 +110,19 @@ def filter_entities(df, minimum_entity_ratio: 0.005):
     
     # filtrar o dataset com as sentenças sem as entidades selecionadas
     dataset_filtered = df[df['toRemoveSentence'] == False].drop('toRemoveSentence', axis=1) # remover a coluna auxiliar
+    dataset_filtered = dataset_filtered.reset_index(drop=True)
+    return dataset_filtered
+
+
+
+def undersampling(df, ratio=0.5):
+    # sentences with ALL TAGS '0'
+    df['nullSentences'] = df['tags'].apply(lambda tags: all([tag == 'O' for tag in tags] ))
+
+    df2 = df[df['nullSentences'] == True].sample(frac = ratio, random_state = 0) 
+
+    dataset_filtered = df[~df.index.isin(df2.index)] # todos os index que não estão nos retirados
+    dataset_filtered = dataset_filtered.drop('nullSentences', axis=1) # remover a coluna criada e resetar os indexes
     
-    dataset_filtered = dataset_filtered.reset_index() # reset index
-    return dataset_filtered 
+    return dataset_filtered.reset_index()
 
