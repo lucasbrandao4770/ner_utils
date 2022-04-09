@@ -20,7 +20,9 @@ Args:
     
     --version folder_version (example: version_0)
     
-    --max_length filter for sentence tokens max_length (example: 250)
+    --max_length filter for sentence tokens max_length (example: 256)
+
+    --verbose For showing the graphs, and editing them (default = False)
     
 
 
@@ -29,8 +31,12 @@ Args:
 
 TO DO
 
-[ ] Args de verbose para ver ou não os gráficos
+[ X ] Args de verbose para ver ou não os gráficos
 
-[ ] Args de tags minimum ratio para filtrar o dataset
+[ X ] Pre processamento de dataset -> filtro de sentença máxima 
+
+[ X ] Pre processamento de dataset -> remoção de entidades
+
+[ X ] Pre processamento de dataset -> remoção de sentenças sem nenhuma entidade 
 
 [ ] Criar uma thread para a visualização dos gráfico, para permitir a execução durante a visualização

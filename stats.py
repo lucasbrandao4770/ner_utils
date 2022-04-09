@@ -46,9 +46,11 @@ class Stats:
 
         # ORDEM DECRESCENTE DO LABELS E RETIRANDO _ 
         self.labels = {k.replace('_', ' '): v for k, v in sorted(labels.items(), key=lambda item: item[1], reverse=True)}
-        self.labels_ratio = {k:(v/sum(labels.values())) for k,v in labels.items()} # gerando as porcentagens da quantidade das labels
-        # QUANTIDADE DE SENTENCAS ACIMA DE 250 TOKENS
-        self.sentences_over_250 = self.df[self.df['quantidadeTokens'] > 250].count()['text']        
+        self.labels_ratio = {k:(v/sum(self.labels.values())) for k,v in self.labels.items()} # gerando as porcentagens da quantidade das labels
+        # QUANTIDADE DE SENTENCAS ACIMA DE 256 TOKENS
+        self.sentences_over_256 = self.df[self.df['quantidadeTokens'] > 256].count()['text']    
+        # QUANTIDADE DE SENTENCAS ACIMA DE 512 TOKENS  
+        self.sentences_over_512 = self.df[self.df['quantidadeTokens'] > 512].count()['text']    
 
         
     def get_stats(self):
@@ -56,7 +58,8 @@ class Stats:
         infos = {
             'Sentences Count': self.count_sentences, #int
             'Sentences Null Length': self.len_null_sentences, #int
-            'Sentences Over 250 tokens': self.sentences_over_250, #int
+            'Sentences Over 256 tokens': self.sentences_over_256, #int
+            'Sentences Over 512 tokens': self.sentences_over_256, #int
             'Tokens Count': self.len_tokens, #int
             'Tokens Max Length': self.max_token, #int
             'Tokens Mean Length': self.mean_token,  #int
@@ -130,7 +133,8 @@ class DatasetAnalysis:
         # COUNT SENTENCE WITH ALL NULL TAGS
         text.append(  f"A quantidade de sentenças sem entidades: {self.stats['Sentences Null Length']}\n\n"  )     
        
-        text.append( f"O dataset possui {str(self.stats['Sentences Over 250 tokens'])} sentenças com tamanho maior que 250 tokens\n\n"  )  
+        text.append( f"O dataset possui {str(self.stats['Sentences Over 256 tokens'])} sentenças com tamanho maior que 256 tokens\n\n"  )  
+        text.append( f"O dataset possui {str(self.stats['Sentences Over 512 tokens'])} sentenças com tamanho maior que 512 tokens\n\n"  )  
                     
         text.append(  f"Quantidade de classes: {str(self.stats['Labels Length'])}\n"  )     
         text.append(  f"Quantidade de tags NÃO VAZIAS: {str(self.stats['Tags Length'])}\n"  ) 

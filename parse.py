@@ -10,6 +10,7 @@ def parseArguments():
         type=int,
         default=250,       
         help="Max tokens length for sentence")
+    parser.add_argument('--verbose', type=bool, default=False, help='Verbose for showing the graphs')
 
     args, _ = parser.parse_known_args()
         
