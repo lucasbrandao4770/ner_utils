@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from typing import List
 
-def filter_length_dataset(df, length_to_filter = 250):
+def filter_length_dataset(df, length_to_filter = 256):
     assert length_to_filter > 0, 'Length must be positive'
     df['quantidadeTokens'] = df['text'].apply(len)   # QUANTIDADE DE SENTENÇAS/MAX/MEDIA E MIN
     dataset_filtered = df[df['quantidadeTokens'] <= length_to_filter]  
@@ -44,22 +44,22 @@ def remove_entites(df, entities_to_remove: List):
 
 
 
-def undersampling_null_sentences(df, ratio=0.5):
+def undersampling_null_sentences(df, ratio_to_remove=0.5):
     # sentences with ALL TAGS '0'
     df['nullSentences'] = df['tags'].apply(lambda tags: all([tag == 'O' for tag in tags] ))
 
-    df2 = df[df['nullSentences'] == True].sample(frac = ratio, random_state = 0) 
+    df2 = df[df['nullSentences'] == True].sample(frac = ratio_to_remove, random_state = 0) 
 
     dataset_filtered = df[~df.index.isin(df2.index)] # todos os index que não estão nos retirados
     dataset_filtered = dataset_filtered.drop('nullSentences', axis=1) # remover a coluna criada e resetar os indexes
     
     return dataset_filtered.reset_index()
 
-def undersampling_entity(df, undersampling_tags, ratio=0.5):
+def undersampling_entity(df, undersampling_tags, ratio_to_remove=0.5):
     # sentences with at least one TAG
     df['withEntity'] = df['tags'].apply(lambda tags: any([tag[2:] in undersampling_tags for tag in tags ] ))
 
-    df2 = df[df['withEntity'] == True].sample(frac = ratio, random_state = 0) 
+    df2 = df[df['withEntity'] == True].sample(frac = ratio_to_remove, random_state = 0) 
 
     dataset_filtered = df[~df.index.isin(df2.index)] # todos os index que não estão nos retirados
     dataset_filtered = dataset_filtered.drop('withEntity', axis=1) # remover a coluna criada e resetar os indexes

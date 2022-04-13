@@ -8,7 +8,7 @@ def parseArguments():
     parser.add_argument(
         "--max_length",
         type=int,
-        default=250,       
+        default=256,       
         help="Max tokens length for sentence")
     parser.add_argument('--verbose', type=bool, default=False, help='Verbose for showing the graphs')
 
