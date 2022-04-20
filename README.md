@@ -7,7 +7,7 @@ Generates subfolder for each version and fold's, with stats and filtered max_len
 ## How to use 
 - Example
 
-python main.py --f corejur_nerv2.conll --kfold 5 --version versao0 --max_length 250
+python main.py --f corejur_nerv2.conll --kfold 5 --version versao0 --max_length 256 --verbose True
 
 
 
