@@ -1,3 +1,6 @@
 *.conll
 /*/
 *.json
+*.xlsx
+*.txt
+*.ipynb
