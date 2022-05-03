@@ -1,15 +1,15 @@
 import os
 from sklearn.model_selection import KFold
-import utils
-import parse
-from stats import DatasetAnalysis
-import dataset_preprocessing as preprocessing
+from src import utils
+from src import parse
+from src.stats import DatasetAnalysis
+import src.dataset_preprocessing as preprocessing
 
 args = parse.parseArguments()  # PARSING ARGS
 
 FILENAME = args.f
 N_KFOLD = args.kfold
-FOLDER_VERSION = args.version
+FOLDER_VERSION = "_"+args.version  # cause of gitignore
 MAX_LENGTH = args.max_length
 VERBOSE = args.verbose
 # assert the version do not exists
@@ -19,21 +19,20 @@ os.makedirs(FOLDER_VERSION)
 
 print('Loading Dataset')
 df = utils.conll2pandas(FILENAME)  # LOAD THE DATASET FROM CONLL FILE
-
 print('Dataset loaded')
-kf = KFold(n_splits=N_KFOLD, random_state=0, shuffle=True)  # KFOLD WITH SEED 0
 
 
-# DATASET ANALYSIS
+####################### ALL DATA ANALYSIS #######################
+
 analysis_fulldataset = DatasetAnalysis(path=FILENAME, df=df)
 stats = analysis_fulldataset.generate_dataset_info(is_alldata=True)
 with open(os.path.join(FOLDER_VERSION, 'stats_full.txt'), 'w', encoding='utf-8') as f:
     f.writelines(stats)
 
-
 analysis_fulldataset.convert_stats2excel(FOLDER_VERSION)
 if VERBOSE:
     analysis_fulldataset.plot_graphs(FOLDER_VERSION)
+
 
 ####################### PRE PROCESSING #######################
 
@@ -57,12 +56,17 @@ df = preprocessing.undersampling_entity(
     df, undersampling_tags=undersampling_tags, ratio_to_remove=0.8)
 
 
+####################### SPLIT IN K FOLDS AND GENERATE ANALYSIS #######################
+kf = KFold(n_splits=N_KFOLD, random_state=0, shuffle=True)  # KFOLD WITH SEED 0
+
 for i, (train_index, test_index) in enumerate(kf.split(df)):
     save_path = FOLDER_VERSION+'/'+'fold-'+str(i)+'/'    # PATH TO SAVE
     os.makedirs(save_path)    # CREATE THE FOLDER VERSION AND SUBFOLDER
 
     # get the data from indexes
     train_data, test_data = df.loc[train_index], df.loc[test_index]
+
+    # FOLD ANALYSIS
     stats = []
     analysis_train = DatasetAnalysis(path=FILENAME, df=train_data)
     analysis_test = DatasetAnalysis(path=FILENAME, df=test_data)

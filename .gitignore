@@ -1,6 +1,7 @@
 *.conll
-/*/
 *.json
 *.xlsx
 *.txt
 *.ipynb
+*.png
+/_*/
