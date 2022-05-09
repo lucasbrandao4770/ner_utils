@@ -35,6 +35,32 @@ def conll2pandas(path: str, sep=' '):
     return df
 
 
+def conll2pandas_group_by_token(path: str, sep=' ', only_last=True):
+    """Convert conll file to pandas dataframe.
+
+    This function differs from {conll2pandas} by making
+    each row of the dataframe a token, with all of it's labels.
+
+    Args:
+        path (str): filename (eg. dataset.conll)
+        only_last (boolean): if set to True, only the last tag (label)
+            will be put in the tags column.
+    """
+
+    with open(path, 'r', encoding='UTF8') as f:
+        texts = []
+        tags = []
+        for line in f.readlines():
+            line_list = line.replace('\n', '').replace('  ', ' ').split(sep)
+            tag = line_list[-1] if only_last else line_list[1:]
+
+            if line_list[0] != '':
+                texts.append(line_list[0])
+                tags.append(tag)
+
+    return pd.DataFrame({'text': texts, 'tags': tags})
+
+
 def pandas2conll(df, fname):
     """Convert pandas Dataframe to conll file
 
