@@ -2,21 +2,21 @@ import pandas as pd
 from src import utils
 
 redator = ['B-Valor_dano_moral',
-'B-Data_do_contrato',
-'B-CNPJ_do_réu',
-'B-CPF_do_réu']
+           'B-Data_do_contrato',
+           'B-CNPJ_do_réu',
+           'B-CPF_do_réu']
 
 auxiliar = ['B-Valor_danos_materiais/restituição_em_dobro',
-'B-Valor_da_causa',
-'B-Valor_da_multa_–_Tutela_provisória',
-'B-Valores',
-'B-Data_da_petição',
-'B-Data_dos_fatos',
-'B-Datas',
-'B-CNPJ_do_autor',
-'B-CNPJ',
-'B-CPF_do_autor',
-'B-CPF']
+            'B-Valor_da_causa',
+            'B-Valor_da_multa_–_Tutela_provisória',
+            'B-Valores',
+            'B-Data_da_petição',
+            'B-Data_dos_fatos',
+            'B-Datas',
+            'B-CNPJ_do_autor',
+            'B-CNPJ',
+            'B-CPF_do_autor',
+            'B-CPF']
 
 
 def __find_indexes_from_label(dataset, label, tags_column='tags'):
@@ -75,16 +75,18 @@ def __split_percents(entidades_train, entidades_test):
 
     for train_percent, test_percent in zip(entidades_train, entidades_test):
         total = train_percent + test_percent
-        division_percent_train.append(train_percent / total if total > 0 else 0)
-        division_percent_test.append(1 - (train_percent / total) if total > 0 else 0)
+        division_percent_train.append(
+            train_percent / total if total > 0 else 0)
+        division_percent_test.append(
+            1 - (train_percent / total) if total > 0 else 0)
         one_entity_percent.append(1 / total if total > 0 else 0)
 
     return division_percent_train, division_percent_test, one_entity_percent
 
 
 def __get_balancing_samples(
-    division_percent_train, division_percent_test, one_division_percent,
-    upper_limit=0.75, balancing_range=0.10):
+        division_percent_train, division_percent_test, one_division_percent,
+        upper_limit=0.75, balancing_range=0.10):
     """Analisa as porcentagens geradas por 'split_percents' e calcula
     a quantidade de cada entidade que deve ser passada de um dataset
     para o outro.
@@ -118,19 +120,22 @@ def __get_balancing_samples(
     """
     balancing_samples = []
     lower_limit = upper_limit - balancing_range
-
     for train, _test, step in zip(division_percent_train, division_percent_test, one_division_percent):
-        c = 0 # quantas amostras do treino serão passadas para test
+        c = 0  # quantas amostras do treino serão passadas para test
 
-        if train >= upper_limit:
-            while train >= upper_limit:
-                train -= step
-                c += 1
+        while train >= upper_limit:
+            if step == 0:
+                break
 
-        elif train <= lower_limit:
-            while train <= lower_limit:
-                train += step
-                c -= 1
+            train -= step
+            c += 1
+
+        while train < lower_limit:
+            if step == 0:
+                break
+
+            train += step
+            c -= 1
 
         balancing_samples.append(c)
 
@@ -150,7 +155,8 @@ def __count_entities(dataset, entities):
     """
     entity_count = []
     for entity in entities:
-        entity_count.append(dataset.loc[dataset['tags']==entity, 'tags'].count())
+        entity_count.append(
+            dataset.loc[dataset['tags'] == entity, 'tags'].count())
 
     return entity_count
 
@@ -172,7 +178,8 @@ def __balance_entity(destination, source, qtd, entity, normalize_qtd=True):
         qtd = -2, normalize_qtd = True -> 2 entidades transferidas
         qtd = -2, normalize_qtd = False -> 5 entidades transferidas
     """
-    if normalize_qtd: qtd = abs(qtd)
+    if normalize_qtd:
+        qtd = abs(qtd)
 
     # encontra os índices de ocorrências que possuem uma entidade em específico
     correcao_index = __find_indexes_from_label(source, entity)[:qtd]
@@ -184,11 +191,12 @@ def __balance_entity(destination, source, qtd, entity, normalize_qtd=True):
 
             # tenta remover a linha no dataset original
             source = source.drop(index)
-            print(f"Dropped index: {index}")
+            #print(f"Dropped index: {index}")
 
             # tenta adicionar a linha no dataset de destino
             # esse comando só será executado caso a linha ainda não tenha sido transferida
-            destination = pd.concat([destination, pd.DataFrame([row])], ignore_index=True)
+            destination = pd.concat(
+                [destination, pd.DataFrame([row])], ignore_index=True)
 
         except KeyError:
             # falha ao remover uma linha, normalmente por que a linha já foi removida
@@ -235,12 +243,12 @@ def __realizar_correcao(dataset_train, dataset_test, contagem_correcao, nomes_en
         # passa amostras de treino pra test
         if correcao > 0:
             dataset_test, dataset_train = __balance_entity(dataset_test, dataset_train,
-                                                        correcao, entidade)
+                                                           correcao, entidade)
 
         # passa amostras de test pra treino
         elif correcao < 0:
             dataset_train, dataset_test = __balance_entity(dataset_train, dataset_test,
-                                                        correcao, entidade)
+                                                           correcao, entidade)
 
     return dataset_train, dataset_test
 
@@ -287,7 +295,8 @@ def balance_from_conll(path_to_train: str, path_to_test: str):
 
     """
     # Dataframe token -> tag
-    train_dataframe_token_tag = utils.conll2pandas_group_by_token(path_to_train)
+    train_dataframe_token_tag = utils.conll2pandas_group_by_token(
+        path_to_train)
     test_dataframe_token_tag = utils.conll2pandas_group_by_token(path_to_test)
 
     # Quantidade de entidades em cada dataset
@@ -298,9 +307,9 @@ def balance_from_conll(path_to_train: str, path_to_test: str):
 
     # Distribuição e relevância das entidades redator e auxiliar por dataset
     division_percent_train_red, division_percent_test_red, one_entity_percent_red = \
-    __split_percents(entities_red_train, entities_red_test)
+        __split_percents(entities_red_train, entities_red_test)
     division_percent_train_aux, division_percent_test_aux, one_entity_percent_aux = \
-    __split_percents(entities_aux_train, entities_aux_test)
+        __split_percents(entities_aux_train, entities_aux_test)
 
     # Vetores de correção
     redator_correction_values = __get_balancing_samples(division_percent_train_red,
@@ -316,16 +325,16 @@ def balance_from_conll(path_to_train: str, path_to_test: str):
 
     # Balanceamento das entidades redator
     dataset_train_balanced, dataset_dev_balanced = \
-    __realizar_correcao(train_dataframe_sent_tags,
-                        test_dataframe_sent_tags,
-                        redator_correction_values,
-                        redator)
+        __realizar_correcao(train_dataframe_sent_tags,
+                            test_dataframe_sent_tags,
+                            redator_correction_values,
+                            redator)
 
     # Balanceamento das entidades teste
     dataset_train_balanced, dataset_dev_balanced = \
-    __realizar_correcao(train_dataframe_sent_tags,
-                        test_dataframe_sent_tags,
-                        auxiliar_correction_values,
-                        auxiliar)
+        __realizar_correcao(train_dataframe_sent_tags,
+                            test_dataframe_sent_tags,
+                            auxiliar_correction_values,
+                            auxiliar)
 
     return dataset_train_balanced, dataset_dev_balanced

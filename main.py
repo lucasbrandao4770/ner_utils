@@ -1,10 +1,10 @@
-import balanceamento
 import os
 from sklearn.model_selection import KFold
 from src import utils
 from src import parse
 from src.stats import DatasetAnalysis
 import src.dataset_preprocessing as preprocessing
+from src.balanceamento import balance_from_conll
 
 args = parse.parseArguments()  # PARSING ARGS
 
@@ -52,9 +52,9 @@ df = preprocessing.filter_length_dataset(
 #df = preprocessing.undersampling_null_sentences(df, ratio_to_remove=0.8)
 
 # UNDERSAMPLING TAGs
-undersampling_tags = ['Normativo']
-df = preprocessing.undersampling_entity(
-    df, undersampling_tags=undersampling_tags, ratio_to_remove=0.8)
+# undersampling_tags = ['Normativo']
+# df = preprocessing.undersampling_entity(
+#     df, undersampling_tags=undersampling_tags, ratio_to_remove=0.8)
 
 
 ####################### SPLIT IN K FOLDS AND GENERATE ANALYSIS #######################
@@ -81,19 +81,23 @@ for i, (train_index, test_index) in enumerate(kf.split(df)):
     with open(os.path.join(save_path, 'stats.txt'), 'w', encoding='utf-8') as f:
         f.writelines(stats)
 
-    # CONVERT TO CONLL AND SAVE
-    utils.pandas2conll(train_data, save_path+'train.conll')  # SAVE IN CONLL
-    utils.pandas2conll(test_data, save_path+'dev.conll')
-
-    # BALANCE AND REWRITE CONLL FILES
-    train_data, test_data = balanceamento.balance_from_conll(save_path+'train.conll',
-                                                             save_path+'dev.conll')
-
-    # SAVE AGAIN IN CONLL AND JSON
+    # SAVE KFOLD SPLIT DATASET
     utils.pandas2conll(train_data, save_path+'train.conll')  # SAVE IN CONLL
     utils.pandas2conll(test_data, save_path+'dev.conll')
     utils.pandas2json(train_data, save_path+'train.json')  # SAVE IN JSON
     utils.pandas2json(test_data, save_path+'dev.json')
+
+    # BALANCE AND REWRITE CONLL FILES
+    train_data, test_data = balance_from_conll(save_path+'train.conll',
+                                               save_path+'dev.conll')
+
+    # SAVE BALANCED DATASET
+    utils.pandas2conll(train_data, save_path +
+                       'train_balanceado.conll')  # SAVE IN CONLL
+    utils.pandas2conll(test_data, save_path+'dev_balanceado.conll')
+    utils.pandas2json(train_data, save_path +
+                      'train_balanceado.json')  # SAVE IN JSON
+    utils.pandas2json(test_data, save_path+'dev_balanceado.json')
 
     print(f'Save dataset and stats for fold-{i}')
 
