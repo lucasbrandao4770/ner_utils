@@ -201,7 +201,8 @@ def __balance_entity(destination, source, qtd, entity, normalize_qtd=True):
         except KeyError:
             # falha ao remover uma linha, normalmente por que a linha já foi removida
             # (2 tags que devem ser balanceadas presentes na mesma linha)
-            print(f"The index {index} was already dropped!")
+            #print(f"The index {index} was already dropped!")
+            pass
 
     return destination, source
 
