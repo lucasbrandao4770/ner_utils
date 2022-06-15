@@ -4,7 +4,8 @@ import time
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
-#from utils import conll2pandas
+
+from collections import Counter
 
 
 class Stats:
@@ -23,29 +24,22 @@ class Stats:
 
         # QUANTIDADE DE SENTENÇAS/MAX/MEDIA E MIN
         # atributes
-        self.count_sentences = tokens_described['count']
-        self.max_token = tokens_described['max']
-        self.min_token = tokens_described['min']
+        self.count_sentences = tokens_described['count'].astype(int)
+        self.max_token = tokens_described['max'].astype(int)
+        self.min_token = tokens_described['min'].astype(int)
         self.mean_token = tokens_described['mean'].round(2)
         # QUANTIDADE TOTAL DE TOKENS
         self.len_tokens = self.df['quantidadeTokens'].sum()
-        # QUANTIDADE DE SENTENÇAS COMPLETAMENTE VAZIAS
+        # QUANTIDADE DE SENTENÇAS COMPLETAMENTE VAZIAS (SENTENÇAS NEGATIVAS)
         self.len_null_sentences = self.df['isSentenceNull'].sum()
 
-        # TODAS AS TAGS DIFERENTES DE 'O'
-        labels = {tag[2:]: 0 for tags in self.df["tags"]
-                  for tag in tags if tag != "O"}
         tags = np.array([tag[2:] for tags in self.df["tags"]
-                        for tag in tags if tag != "O"])
+                        for tag in tags if tag[0] == "B"])
 
-        for k in labels:
-            labels[k] = sum(tags == k)
+        labels = dict(Counter(tags).most_common())
 
         self.len_labels = len(labels)
         self.len_tags = len(tags)
-        tags_null = [tag for tags in self.df["tags"]
-                     for tag in tags if tag == "O"]  # tags TOTAIS NULAS
-        self.len_null_tags = len(tags_null)
 
         # ORDEM DECRESCENTE DO LABELS E RETIRANDO _
         self.labels = {k.replace('_', ' '): v for k, v in sorted(
@@ -63,16 +57,15 @@ class Stats:
     def get_stats(self):
         # Token section
         infos = {
-            'Sentences Count': self.count_sentences,  # int
-            'Sentences Null Length': self.len_null_sentences,  # int
-            'Sentences Over 256 tokens': self.sentences_over_256,  # int
-            'Sentences Over 512 tokens': self.sentences_over_256,  # int
-            'Tokens Count': self.len_tokens,  # int
-            'Tokens Max Length': self.max_token,  # int
-            'Tokens Mean Length': self.mean_token,  # int
-            'Tags Length': self.len_tags,  # int
-            'Tags Null Length': self.len_null_tags,  # int
-            'Labels Length': self.len_labels,  # int
+            'Quantidade de Sentenças': self.count_sentences,  # int
+            'Quantidade de Sentenças Negativas': self.len_null_sentences,  # int
+            'Quantidade de Sentenças acima de 256 tokens': self.sentences_over_256,  # int
+            'Quantidade de Sentenças acima de 512 tokens': self.sentences_over_512,  # int
+            'Quantidade de Tokens': self.len_tokens,  # int
+            'Tamanho da maior Sentença (tokens)': self.max_token,  # int
+            'Tamanho médio das Sentenças': self.mean_token,  # int
+            'Quantidade de Entidades': self.len_tags,  # int
+            'Quantidade de Classes': self.len_labels,  # int
 
             'Labels': self.labels,  # dict
             'Labels Ratio': self.labels_ratio,  # dict
@@ -81,19 +74,10 @@ class Stats:
 
 
 class DatasetAnalysis:
-    def __init__(self, path, df=None):
-        self.df = df  # conll2pandas(path) #if df!=None else df
+    def __init__(self, df):
+        self.df = df
         self.stats = Stats(self.df).get_stats()
-        self.time_stamp = self._get_df_timestamp(path)
         self.FIG_PATH = 'figs_outputs'
-
-    def _get_df_timestamp(self, path, data_format='%m-%Y'):
-        assert data_format in ['%Y-%m-%d', '%m-%Y',
-                               '%d-%m-%Y'], 'Invalid data format'
-        ti_c = os.path.getctime(path)
-        time_created = time.ctime(ti_c)
-        t_obj = time.strptime(time_created)
-        return time.strftime(data_format, t_obj)  # OR "%d-%m-%Y" OR "%Y-%m-%d"
 
     def convert_stats2excel(self, save_path=''):
         token_infos = self.stats.copy()
@@ -102,16 +86,16 @@ class DatasetAnalysis:
 
         excel_sheet1 = {
             # COLUMN        # ROWS
-            'Tokens infos': token_infos,
+            'Informações': token_infos,
         }
 
         excel_sheet2 = {
-            'Quantidade de Labels': labels,
-            'Porcentagem das Labels': labels_ratio,
+            'Quantidade de Entidades': labels,
+            'Distribuição das Entidades': labels_ratio,
         }
 
         writer = pd.ExcelWriter(os.path.join(
-            save_path, f'analysis_{self.time_stamp}.xlsx'), engine='xlsxwriter')
+            save_path, f'stats_dataset.xlsx'), engine='xlsxwriter')
 
         pd.DataFrame.from_dict(excel_sheet1, orient='columns')\
             .to_excel(writer, sheet_name='TokenInfo')
@@ -132,50 +116,52 @@ class DatasetAnalysis:
                 f"Processing {'train' if train_data else 'test'} dataset FOLD-{n_fold} statistics \n\n"]
 
         # DESCRIBE INFORMATIONS
-        text.append(f"{int(self.stats['Sentences Count'])} sentences\n")
+        text.append(
+            f"{int(self.stats['Quantidade de Sentenças'])} sentences\n")
         # COUNT TOTAL TOKENS
-        text.append(f"{str(self.stats['Tokens Count'])} tokens\n")
+        text.append(f"{str(self.stats['Quantidade de Tokens'])} tokens\n")
         text.append('\n')
         text.append(
-            f"O tamanho médio das sentenças é: {int(self.stats['Tokens Mean Length'])} tokens \n")
+            f"O tamanho médio das sentenças é: {(self.stats['Tamanho médio das Sentenças'])} tokens \n")
         text.append(
-            f"O tamanho máximo das sentenças é: {int(self.stats['Tokens Max Length'])} tokens\n")
+            f"O tamanho máximo das sentenças é: {int(self.stats['Tamanho da maior Sentença (tokens)'])} tokens\n")
 
         # COUNT SENTENCE WITH ALL NULL TAGS
         text.append(
-            f"A quantidade de sentenças sem entidades: {self.stats['Sentences Null Length']}\n\n")
+            f"A quantidade de sentenças sem entidades: {self.stats['Quantidade de Sentenças Negativas']}\n\n")
 
         text.append(
-            f"O dataset possui {str(self.stats['Sentences Over 256 tokens'])} sentenças com tamanho maior que 256 tokens\n\n")
+            f"O dataset possui {str(self.stats['Quantidade de Sentenças acima de 256 tokens'])} sentenças com tamanho maior que 256 tokens\n\n")
         text.append(
-            f"O dataset possui {str(self.stats['Sentences Over 512 tokens'])} sentenças com tamanho maior que 512 tokens\n\n")
+            f"O dataset possui {str(self.stats['Quantidade de Sentenças acima de 512 tokens'])} sentenças com tamanho maior que 512 tokens\n\n")
 
         text.append(
-            f"Quantidade de classes: {str(self.stats['Labels Length'])}\n")
+            f"Quantidade de classes: {str(self.stats['Quantidade de Classes'])}\n")
         text.append(
-            f"Quantidade de tags NÃO VAZIAS: {str(self.stats['Tags Length'])}\n")
-        text.append(
-            f"Quantidade de tags VAZIAS ('O'): {str(self.stats['Tags Null Length'])}\n")
+            f"Quantidade de entidades: {str(self.stats['Quantidade de Entidades'])}\n")
 
         text.append('\n\n' + "-"*15+'\n\n')
 
         for k, v in self.stats['Labels'].items():
-            text.append(k+': ' + str(v) + ' tokens\n')
+            text.append(k+': ' + str(v) + ' entidades\n')
         text.append("-"*15+'\n\n')
 
         return text
 
-    def plot_graphs(self, save_path=''):
+    def plot_graphs(self, save_path='', verbose=False):
         if not os.path.exists(os.path.join(save_path, self.FIG_PATH)):
             os.makedirs(os.path.join(save_path, 'figs_outputs'))
 
         sns.set()
-        title = f"Entidades Válidas x Nulas - COREJUR {self.time_stamp}"
+
+        title = f"Sentenças Positivas e Negativas"
+        negative_sentences = self.stats['Quantidade de Sentenças Negativas']
+        positive_sentences = self.stats['Quantidade de Sentenças'] - \
+            self.stats['Quantidade de Sentenças Negativas']
+
         plt.figure(figsize=(10, 10))
-        len_tags_null = self.stats['Tags Null Length']
-        len_tags = self.stats['Tags Length']
-        plt.pie([len_tags_null, len_tags], autopct='%1.1f%%',
-                labels=['Entidades Nulas', 'Entidades Válidas'])
+        plt.pie([negative_sentences, positive_sentences], autopct='%1.1f%%',
+                labels=['Sentenças Negativas', 'Sentenças Positivas'])
         plt.title(title)
         plt.savefig(os.path.join(save_path, self.FIG_PATH, title))
 
@@ -185,9 +171,9 @@ class DatasetAnalysis:
         # PORCENTAGEM
         tags_ratio = df_tags['Freq tags'] * 100 / sum(df_tags['Freq tags'])
 
-        title = f'Distribuição de Entidades {self.time_stamp}'
-        plt.figure(figsize=(30, 10))
+        title = f'Distribuição de Entidades'
 
+        plt.figure(figsize=(30, 10))
         g = sns.barplot(tags_ratio, df_tags.index,
                         palette=sns.color_palette('bright'))
         g.set_title(title)
@@ -197,4 +183,5 @@ class DatasetAnalysis:
             g.text(v, i, str(round(v, 2)) + '%', color='black')
 
         plt.savefig(os.path.join(save_path, self.FIG_PATH, title))
-        plt.show()
+        if verbose:
+            plt.show()
