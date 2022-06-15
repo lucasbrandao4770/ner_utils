@@ -1,5 +1,8 @@
 import pandas as pd
 import json
+import numpy as np
+import os
+import random
 
 
 def conll2pandas(path: str, sep=' '):
@@ -98,3 +101,10 @@ def pandas2json(df, fname: str):
     with open(fname, 'w', encoding='utf8') as file:
         for text in texts:
             json.dump(text, file, ensure_ascii=False)
+
+
+def fix_seed(random_state):
+    np.random.seed(random_state)
+    random.seed(random_state)
+    os.environ['PYTHONHASHSEED'] = str(random_state)
+    print(f'SEED {random_state} FIXED!')
