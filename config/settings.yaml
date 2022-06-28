@@ -1,0 +1,64 @@
+hydra:  
+  output_subdir: null  
+  run:  
+    dir: .
+
+DATASET:
+  folder : _datasets
+  filename : corejur_ner_v11.conll
+
+SAVE:
+  save_folder : data/processed/v11_80_0
+  # save file into .conll
+  save_into_conll : True 
+  # save file into .json
+  save_into_json : True
+  # save only fold 0
+  save_only_first_fold : True
+
+KFOLD:
+  n_fold : 5 
+
+UTILS:
+  # verbose for plots
+  plot_verbose : False 
+  random_state : 0 
+
+PREPROCESSING:
+  # MAX LENGTH TO TRUNCATE SENTENCE
+  max_length_sentence : 256 
+
+  #  train and test folds stratified
+  balance_folds : True 
+
+  # REPLACE these TAGS to 'O'  - DEFAULT ''
+  fill_O_tags: 
+    - CNPJ
+    - CPF
+    - CNPJ_do_autor
+    - CPF_do_réu
+    - Jurisprudência
+ 
+
+  # Concatanate any DATAS TO GENERIC DATAS - DEFAULT None
+  datas_aggregation: 
+    - Data_do_contrato
+    - Data_dos_fatos
+   
+
+  # Remove Sentences with all tags :: 'O' - DEFAULT : TRUE
+  # APPLIED ON EACH TRAIN DATA FOR EACH FOLD
+  undersampling_negative_sentences  : True 
+  # ratio to remove - DEFAULT : 0.8
+  ratio_of_undersample_negative_sentences : 0.8
+
+  #  OR e.g. [Normativo] - DEFAULT ''
+  undersampling_tags:
+   - Normativo  
+  # ratio to remove of tags to undersample
+  ratio_of_undersample_tags: 0.5
+
+  # False  - Delete all sentences with tags JURISPRUDENCIA
+  remove_jurisprudencia_sentence : False 
+
+
