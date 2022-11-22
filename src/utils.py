@@ -101,6 +101,7 @@ def pandas2json(df, fname: str):
     with open(fname, 'w', encoding='utf8') as file:
         for text in texts:
             json.dump(text, file, ensure_ascii=False)
+            file.write('\n')
 
 
 def fix_seed(random_state):

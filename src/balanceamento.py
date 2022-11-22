@@ -1,5 +1,6 @@
 import pandas as pd
 from src import utils
+from sklearn.model_selection import train_test_split
 
 redator = ['B-Valor_dano_moral',
            'B-Data_do_contrato',
@@ -337,5 +338,53 @@ def balance_from_conll(path_to_train: str, path_to_test: str):
                             test_dataframe_sent_tags,
                             auxiliar_correction_values,
                             auxiliar)
+
+    return dataset_train_balanced, dataset_dev_balanced
+
+
+def balance_from_one_conll(data_path: str, test_size: 0.2):
+    """Balanceia um dataset com múltiplas classes (exemplo: dataset NER), a partir de
+    arquivos conll.
+
+    Retorna um dataframe contendo colunas 'text' e 'tags', no formato "senteça -> list<tags>".
+
+    Retorno
+    -------
+    balanced_train : pandas.DataFrame
+
+    balanced_test : pandas.DataFrame
+
+    """
+    # Dataframe token -> tag
+    df_token_tag = utils.conll2pandas_group_by_token(data_path)
+
+    entities_list = [tag for tag in df_token_tag.tags.unique() if tag[:2]=='B-']
+
+    train_df_token_tag, test_df_token_tag = train_test_split(df_token_tag, test_size=test_size)
+
+    # Quantidade de entidades em cada dataset
+    entities_train = __count_entities(train_df_token_tag, entities_list)
+    entities_test = __count_entities(test_df_token_tag, entities_list)
+
+    # Distribuição e relevância das entidades redator e auxiliar por dataset
+    division_percent_train, division_percent_test, one_entity_percent = \
+        __split_percents(entities_train, entities_test)
+
+    # Vetores de correção
+    correction_values = __get_balancing_samples(division_percent_train,
+                                                division_percent_test,
+                                                one_entity_percent)
+
+    # Dataset sentença -> list<tag>
+    df_sent_tags = utils.conll2pandas(data_path)
+
+    train_df_sent_tags, test_df_sent_tags = train_test_split(df_sent_tags, test_size=test_size)
+
+    # Balanceamento das entidades
+    dataset_train_balanced, dataset_dev_balanced = \
+        __realizar_correcao(train_df_sent_tags,
+                            test_df_sent_tags,
+                            correction_values,
+                            entities_list)
 
     return dataset_train_balanced, dataset_dev_balanced
