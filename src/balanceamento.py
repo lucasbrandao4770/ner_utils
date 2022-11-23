@@ -342,7 +342,7 @@ def balance_from_conll(path_to_train: str, path_to_test: str):
     return dataset_train_balanced, dataset_dev_balanced
 
 
-def balance_from_one_conll(data_path: str, test_size: 0.2):
+def balance_from_one_conll(data_path: str, test_size: float=0.2):
     """Balanceia um dataset com múltiplas classes (exemplo: dataset NER), a partir de
     arquivos conll.
 
